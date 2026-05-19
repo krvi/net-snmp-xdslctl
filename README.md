@@ -37,7 +37,7 @@ Much of the MIB boilerplate is generated using `mib2c`.
 
 ## Drawbacks / Deficiencies / TODOs
 - [x] **Avoiding hardcoded `ifIndex` values.**
-The module currently assumes fixed `ifIndex` values for `ptm0` and `ptm0.2`, based on the observed behavior of this modem. Ideally, this should be determined dynamically by inspecting the interface table and matching names — even though the most appropriate one may not necessarily exist.
+The module ~~currently assumes~~ used to assume fixed `ifIndex` values for `ptm0` and `ptm0.2`, based on the observed behavior of the VMG4005 modem. Ideally, this should be determined dynamically by inspecting the interface table and matching names, even though the most appropriate one may not necessarily exist.
 
   This module now asks net-snmp for `ifIndex` of `ptm0`, `atm0` and `dsl0`, in that order. This module will then use the provided `ifIndex` for its values, and if there is more than one `xdslctl` 'line' detected it will use the same `ifIndex+n`.
   * LibreNMS (and likely others) expects an interface with `ifType` set to `vdsl(97)` or `adsl(94)`. This can be accomodated in `snmpd.conf`, for example:
