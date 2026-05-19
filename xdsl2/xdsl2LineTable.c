@@ -175,6 +175,9 @@ xdsl2LineTable_get_first_data_point(void** my_loop_context, void** my_data_conte
 
 static void populate_xdsl2LineTable(void) {
 	struct xdsl2LineTable_entry* entry;
+	uint8_t known_lines;
+	uint32_t base_ifindex;
+	xdsl_stats_t lines_stats[MAX_XDSL_LINES];
 
 	// Free old list if needed
 	while (xdsl2LineTable_head) {
@@ -183,12 +186,18 @@ static void populate_xdsl2LineTable(void) {
 		free(entry);
 	}
 
-	xdsl_stats_t lines_stats[MAX_XDSL_LINES];
-	uint8_t known_lines = get_xdslctl_stats(lines_stats, MAX_XDSL_LINES);
+	base_ifindex = get_xdsl_base_ifindex();
+
+	if (base_ifindex == 0) {
+		DEBUGMSGTL(("xdsl2LineTable:populate", "No xDSL interface found\n"));
+		return;
+	}
+
+	known_lines = get_xdslctl_stats(lines_stats, MAX_XDSL_LINES);
 	DEBUGMSGTL(("xdsl2LineTable:populate_xdsl2LineTable", "Read %d xDSL lines\n", known_lines));
 
 	for (int8_t linenum = known_lines - 1; linenum >= 0; linenum--) {
-		entry = xdsl2LineTable_createEntry(linenum + BASE_IFINDEX);
+		entry = xdsl2LineTable_createEntry(linenum + base_ifindex);
 
 		entry->xdsl2LineStatusPwrMngState = lines_stats[linenum].xdsl2LineStatusPwrMngState;
 		entry->xdsl2LineStatusAttainableRateDs = lines_stats[linenum].max_down_rate_kbps * 1000;
@@ -280,6 +289,8 @@ xdsl2LineTable_handler(netsnmp_mib_handler* handler, netsnmp_handler_registratio
 	netsnmp_request_info* request;
 	netsnmp_table_request_info* table_info;
 	struct xdsl2LineTable_entry* table_entry;
+
+	int ret;
 
 	DEBUGMSGTL(("xdsl2LineTable:handler", "Processing request (%d)\n", reqinfo->mode));
 
@@ -641,7 +652,6 @@ xdsl2LineTable_handler(netsnmp_mib_handler* handler, netsnmp_handler_registratio
 			table_entry = (struct xdsl2LineTable_entry*)
 				netsnmp_extract_iterator_context(request);
 			table_info = netsnmp_extract_table_info(request);
-			int ret;
 			switch (table_info->colnum) {
 			case COLUMN_XDSL2LINECONFTEMPLATE:
 				/* or possibly 'netsnmp_check_vb_type_and_size' */

@@ -182,6 +182,8 @@ xdsl2LineAlarmConfProfileTable_handler(
 	netsnmp_table_request_info* table_info;
 	struct xdsl2LineAlarmConfProfileTable_entry* table_entry;
 
+	int ret;
+
 	DEBUGMSGTL(("xdsl2LineAlarmConfProfileTable:handler", "Processing request (%d)\n", reqinfo->mode));
 
 	switch (reqinfo->mode) {
@@ -328,7 +330,6 @@ xdsl2LineAlarmConfProfileTable_handler(
 			table_entry = (struct xdsl2LineAlarmConfProfileTable_entry*)
 				netsnmp_extract_iterator_context(request);
 			table_info = netsnmp_extract_table_info(request);
-			int ret;
 			switch (table_info->colnum) {
 			case COLUMN_XDSL2LINEALARMCONFPROFILEXTUCTHRESH15MINFECS:
 				/* or possibly 'netsnmp_check_vb_int_range' */

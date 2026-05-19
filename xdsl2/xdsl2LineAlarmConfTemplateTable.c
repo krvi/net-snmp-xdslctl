@@ -167,6 +167,8 @@ xdsl2LineAlarmConfTemplateTable_handler(
 	netsnmp_table_request_info* table_info;
 	struct xdsl2LineAlarmConfTemplateTable_entry* table_entry;
 
+	int ret;
+
 	DEBUGMSGTL(("xdsl2LineAlarmConfTemplateTable:handler", "Processing request (%d)\n", reqinfo->mode));
 
 	switch (reqinfo->mode) {
@@ -255,7 +257,6 @@ xdsl2LineAlarmConfTemplateTable_handler(
 			table_entry = (struct xdsl2LineAlarmConfTemplateTable_entry*)
 				netsnmp_extract_iterator_context(request);
 			table_info = netsnmp_extract_table_info(request);
-			int ret;
 			switch (table_info->colnum) {
 			case COLUMN_XDSL2LALARMCONFTEMPLINEPROFILE:
 				/* or possibly 'netsnmp_check_vb_type_and_size' */

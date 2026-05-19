@@ -169,6 +169,8 @@ xdsl2SCStatusTable_handler(
 	netsnmp_table_request_info* table_info;
 	struct xdsl2SCStatusTable_entry* table_entry;
 
+	int ret;
+
 	DEBUGMSGTL(("xdsl2SCStatusTable:handler", "Processing request (%d)\n", reqinfo->mode));
 
 	switch (reqinfo->mode) {
@@ -288,7 +290,6 @@ xdsl2SCStatusTable_handler(
 			table_entry = (struct xdsl2SCStatusTable_entry*)
 				netsnmp_extract_iterator_context(request);
 			table_info = netsnmp_extract_table_info(request);
-			int ret;
 			switch (table_info->colnum) {
 			case COLUMN_XDSL2SCSTATUSROWSTATUS:
 				ret = netsnmp_check_vb_rowstatus(request->requestvb,

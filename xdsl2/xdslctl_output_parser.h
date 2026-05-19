@@ -5,7 +5,6 @@
 
 #define MAX_XDSL_LINES 8
 #define MAX_LINE_LEN 256
-#define BASE_IFINDEX 13 // On VMG4005, TODO: Check net-snmpd for proper ifindex ? ptm0, ptm0.2 ? atm?
 
 typedef enum { // ITU-T G.997.1, paragraph #7.5.1.5
     L0 = 0,         // Full power / Showtime
@@ -130,5 +129,6 @@ typedef struct {
 
 uint8_t get_xdslctl_stats(xdsl_stats_t* stats_array, uint8_t max_lines);
 int get_xdslctl_vendor_info(xdsl_vendor_info_t* vendor_info);
+unsigned int get_xdsl_base_ifindex(void);
 
 #endif // XDSLCTL_OUTPUT_PARSER_H

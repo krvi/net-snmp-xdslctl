@@ -131,6 +131,10 @@ xdsl2LineInventoryTable_get_first_data_point(void **my_loop_context, void **my_d
 static void populate_xdsl2LineInventoryTable(void)
 {
     struct xdsl2LineInventoryTable_entry* entry;
+    uint8_t known_lines;
+    uint32_t base_ifindex;
+    xdsl_stats_t lines_stats[MAX_XDSL_LINES];
+    xdsl_vendor_info_t vendor_info;
 
     // Free old list if needed
     while (xdsl2LineInventoryTable_head) {
@@ -139,12 +143,17 @@ static void populate_xdsl2LineInventoryTable(void)
         free(entry);
     }
 
-    xdsl_stats_t lines_stats[MAX_XDSL_LINES];
-    xdsl_vendor_info_t vendor_info;
-    uint8_t known_lines = get_xdslctl_stats(lines_stats, MAX_XDSL_LINES);
+    base_ifindex = get_xdsl_base_ifindex();
+
+    if (base_ifindex == 0) {
+        DEBUGMSGTL(("xdsl2LineInventoryTable:populate", "No xDSL interface found\n"));
+        return;
+    }
+
+    known_lines = get_xdslctl_stats(lines_stats, MAX_XDSL_LINES);
     if (get_xdslctl_vendor_info(&vendor_info) == 0) {
         for (int8_t linenum = known_lines - 1; linenum >= 0; linenum--) {
-            entry = xdsl2LineInventoryTable_createEntry(linenum + BASE_IFINDEX, xtur); // XTUR assumed, don't know if it can be known from xdslctl
+            entry = xdsl2LineInventoryTable_createEntry(linenum + base_ifindex, xtur); // XTUR assumed, don't know if it can be known from xdslctl
             strncpy(entry->xdsl2LInvG994VendorId, vendor_info.xdsl2LInvG994VendorId, sizeof(vendor_info.xdsl2LInvG994VendorId));
             strncpy(entry->xdsl2LInvSerialNumber, vendor_info.xdsl2LInvSerialNumber, sizeof(vendor_info.xdsl2LInvSerialNumber));
             strncpy(entry->xdsl2LInvSystemVendorId, vendor_info.xdsl2LInvSystemVendorId, sizeof(vendor_info.xdsl2LInvSystemVendorId));

@@ -138,6 +138,9 @@ xdsl2ChannelStatusTable_get_first_data_point(void **my_loop_context, void **my_d
 static void populate_xdsl2ChannelStatusTable(void)
 {
     struct xdsl2ChannelStatusTable_entry* entry;
+    uint8_t known_lines;
+    uint32_t base_ifindex;
+    xdsl_stats_t lines_stats[MAX_XDSL_LINES];
 
     // Free old list if needed
     while (xdsl2ChannelStatusTable_head) {
@@ -146,12 +149,19 @@ static void populate_xdsl2ChannelStatusTable(void)
         free(entry);
     }
 
-    xdsl_stats_t lines_stats[MAX_XDSL_LINES];
-    uint8_t known_lines = get_xdslctl_stats(lines_stats, MAX_XDSL_LINES);
+    base_ifindex = get_xdsl_base_ifindex();
+
+    if (base_ifindex == 0) {
+        DEBUGMSGTL(("xdsl2ChannelStatusTable:populate", "No xDSL interface found\n"));
+        return;
+    }
+
+    known_lines = get_xdslctl_stats(lines_stats, MAX_XDSL_LINES);
+
     for (int8_t linenum = known_lines - 1; linenum >= 0; linenum--) {
         DEBUGMSGTL(("xdsl2ChannelStatusTable:populate", "Line %d, Bearer 0 up=%u down=%u\n", linenum, lines_stats[linenum].bearer[0].up_rate_kbps, lines_stats[linenum].bearer[0].down_rate_kbps));
         for (xdsl_termination_unit_t tu = xtuc; tu <= xtur; tu++) { // 1 channel per termination unit
-            entry = xdsl2ChannelStatusTable_createEntry(linenum + BASE_IFINDEX, tu);
+            entry = xdsl2ChannelStatusTable_createEntry(linenum + base_ifindex, tu);
             if (tu == xtur) {
                 // Ignore 2nd bearer.
                 entry->xdsl2ChStatusActDataRate = lines_stats[linenum].bearer[0].down_rate_kbps * 1000;

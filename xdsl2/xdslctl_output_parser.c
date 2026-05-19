@@ -7,6 +7,7 @@
 #include <net-snmp/net-snmp-config.h>
 #include <net-snmp/net-snmp-includes.h>
 #include <net-snmp/agent/net-snmp-agent-includes.h>
+#include <net-snmp/data_access/interface.h>
 #include "xdslctl_output_parser.h"
 
 const char* c_path_to_xdslctl = "/bin/";
@@ -132,15 +133,17 @@ static void parse_vendor_line(char* line, xdsl_vendor_info_t* vendor_info)
 
 static int parse_stats_from_cmd(const char* cmd, xdsl_stats_t* stats)
 {
+	FILE* fp;
+	char buf[MAX_LINE_LEN];
+	uint8_t current_bearer;
 	DEBUGMSGTL(("xdslctl_output_parser", "About to run: %s .\n", cmd));
-	FILE* fp = popen(cmd, "r");
+	fp = popen(cmd, "r");
 	if (fp == NULL) {
 		snmp_log(LOG_ERR, "Failed to run command: %s", cmd);
 		return -1;
 	}
 	
-	char buf[MAX_LINE_LEN];
-	uint8_t current_bearer = 0;
+	current_bearer = 0;
 
 	while (fgets(buf, sizeof(buf), fp)) {
 		trim(buf);
@@ -158,13 +161,13 @@ static int parse_stats_from_cmd(const char* cmd, xdsl_stats_t* stats)
 
 static int parse_vendor_info(const char* cmd, xdsl_vendor_info_t* vendor_info)
 {
+	FILE* fp;
+	char buf[MAX_LINE_LEN];
 	DEBUGMSGTL(("xdslctl_output_parser", "About to run: %s .\n", cmd));
-	FILE* fp = popen(cmd, "r");
+	fp = popen(cmd, "r");
 	if (fp == NULL) {
 		return -1;
 	}
-
-	char buf[MAX_LINE_LEN];
 
 	while (fgets(buf, sizeof(buf), fp)) {
 		trim(buf);
@@ -185,6 +188,9 @@ uint8_t get_xdslctl_stats(xdsl_stats_t* stats_array, uint8_t max_lines)
 	static xdsl_stats_t cached_stats[MAX_XDSL_LINES];
     static uint8_t cached_count = 0;
 	static time_t last_fetch = 0;
+	const char* c_params;
+	uint8_t lines_found;
+	char c_command[128], c_xdslctl_full_path[64];
 
 	time_t now = time(NULL);
 	DEBUGMSGTL(("get_xdslctl_stats", "Time now: %lld, Last fetch: %lld\n", now, last_fetch));
@@ -195,10 +201,8 @@ uint8_t get_xdslctl_stats(xdsl_stats_t* stats_array, uint8_t max_lines)
 		return cached_count;
 	};
 
-	const char* c_params = "info --stats";
-	
-	uint8_t lines_found = 0;
-	char c_command[128], c_xdslctl_full_path[64];
+	c_params = "info --stats";
+	lines_found = 0;
 
 	if (max_lines > 1) {
 		for (uint8_t i = 0; i < max_lines; i++) {
@@ -263,4 +267,20 @@ int get_xdslctl_vendor_info(xdsl_vendor_info_t* vendor_info)
 		return 0;
 	}
 	return -1;
+}
+
+unsigned int get_xdsl_base_ifindex(void)
+{
+	const char *candidates[] = { "ptm0", "atm0", "dsl0", NULL };
+	oid idx;
+	int i;
+
+	for (i = 0; candidates[i]; i++) {
+		idx = netsnmp_access_interface_index_find(candidates[i]);
+		if (idx != 0) {
+			return (unsigned int)idx;
+		}
+	}
+
+	return 0;
 }

@@ -192,6 +192,8 @@ xdsl2LineConfTemplateTable_handler(
 	netsnmp_table_request_info* table_info;
 	struct xdsl2LineConfTemplateTable_entry* table_entry;
 
+	int ret;
+
 	DEBUGMSGTL(("xdsl2LineConfTemplateTable:handler", "Processing request (%d)\n", reqinfo->mode));
 
 	switch (reqinfo->mode) {
@@ -352,7 +354,6 @@ xdsl2LineConfTemplateTable_handler(
 			table_entry = (struct xdsl2LineConfTemplateTable_entry*)
 				netsnmp_extract_iterator_context(request);
 			table_info = netsnmp_extract_table_info(request);
-			int ret;
 			switch (table_info->colnum) {
 			case COLUMN_XDSL2LCONFTEMPLINEPROFILE:
 				/* or possibly 'netsnmp_check_vb_type_and_size' */

@@ -187,6 +187,8 @@ xdsl2LineConfProfModeSpecTable_handler(
 	netsnmp_table_request_info* table_info;
 	struct xdsl2LineConfProfModeSpecTable_entry* table_entry;
 
+	int ret;
+
 	DEBUGMSGTL(("xdsl2LineConfProfModeSpecTable:handler", "Processing request (%d)\n", reqinfo->mode));
 
 	switch (reqinfo->mode) {
@@ -324,7 +326,6 @@ xdsl2LineConfProfModeSpecTable_handler(
 			table_entry = (struct xdsl2LineConfProfModeSpecTable_entry*)
 				netsnmp_extract_iterator_context(request);
 			table_info = netsnmp_extract_table_info(request);
-			int ret;
 			switch (table_info->colnum) {
 			case COLUMN_XDSL2LCONFPROFMAXNOMPSDDS:
 				/* or possibly 'netsnmp_check_vb_int_range' */
