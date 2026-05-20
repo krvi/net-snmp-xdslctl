@@ -61,9 +61,9 @@ struct xdsl2LineInventoryTable_entry {
     uint8_t xdsl2LInvUnit;
 
     /* Column values */
-    char xdsl2LInvG994VendorId[MAX_LEN_8];
-    char xdsl2LInvSystemVendorId[MAX_LEN_8];
-    char xdsl2LInvVersionNumber[MAX_LEN_16];
+    char xdsl2LInvG994VendorId[MAX_LEN_32];
+    char xdsl2LInvSystemVendorId[MAX_LEN_32];
+    char xdsl2LInvVersionNumber[MAX_LEN_32];
     char xdsl2LInvSerialNumber[MAX_LEN_32];
     unsigned int xdsl2LInvSelfTestResult;
     char xdsl2LInvTransmissionCapabilities[MAX_LEN_8];
@@ -135,6 +135,7 @@ static void populate_xdsl2LineInventoryTable(void)
     uint32_t base_ifindex;
     xdsl_stats_t lines_stats[MAX_XDSL_LINES];
     xdsl_vendor_info_t vendor_info;
+    size_t systemVendor_len, version_len;
 
     // Free old list if needed
     while (xdsl2LineInventoryTable_head) {
@@ -152,12 +153,22 @@ static void populate_xdsl2LineInventoryTable(void)
 
     known_lines = get_xdslctl_stats(lines_stats, MAX_XDSL_LINES);
     if (get_xdslctl_vendor_info(&vendor_info) == 0) {
-        for (int8_t linenum = known_lines - 1; linenum >= 0; linenum--) {
+        for (int8_t linenum = known_lines; linenum-- > 0;) {
             entry = xdsl2LineInventoryTable_createEntry(linenum + base_ifindex, xtur); // XTUR assumed, don't know if it can be known from xdslctl
-            strncpy(entry->xdsl2LInvG994VendorId, vendor_info.xdsl2LInvG994VendorId, sizeof(vendor_info.xdsl2LInvG994VendorId));
-            strncpy(entry->xdsl2LInvSerialNumber, vendor_info.xdsl2LInvSerialNumber, sizeof(vendor_info.xdsl2LInvSerialNumber));
-            strncpy(entry->xdsl2LInvSystemVendorId, vendor_info.xdsl2LInvSystemVendorId, sizeof(vendor_info.xdsl2LInvSystemVendorId));
-            strncpy(entry->xdsl2LInvVersionNumber, vendor_info.xdsl2LInvVersionNumber, sizeof(vendor_info.xdsl2LInvVersionNumber));
+            strncpy(entry->xdsl2LInvG994VendorId, vendor_info.xdsl2LInvG994VendorId, sizeof(entry->xdsl2LInvG994VendorId) - 1);
+            entry->xdsl2LInvG994VendorId[sizeof(entry->xdsl2LInvG994VendorId) - 1] = '\0';
+            strncpy(entry->xdsl2LInvSerialNumber, vendor_info.xdsl2LInvSerialNumber, sizeof(entry->xdsl2LInvSerialNumber) - 1);
+            entry->xdsl2LInvSerialNumber[sizeof(entry->xdsl2LInvSerialNumber) - 1] = '\0';
+            systemVendor_len = vendor_info.xdsl2LInvSystemVendorId_len;
+            if (systemVendor_len > sizeof(entry->xdsl2LInvSystemVendorId)){
+                systemVendor_len = sizeof(entry->xdsl2LInvSystemVendorId);
+            }
+            memcpy(entry->xdsl2LInvSystemVendorId, vendor_info.xdsl2LInvSystemVendorId, systemVendor_len);
+            version_len = vendor_info.xdsl2LInvVersionNumber_len;
+            if (version_len > sizeof(entry->xdsl2LInvVersionNumber)){
+                version_len = sizeof(entry->xdsl2LInvVersionNumber);
+            }
+            memcpy(entry->xdsl2LInvVersionNumber, vendor_info.xdsl2LInvVersionNumber, version_len);
         }
     }
 }

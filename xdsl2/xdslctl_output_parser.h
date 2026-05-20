@@ -121,10 +121,13 @@ typedef struct {
 } xdsl_stats_t;
 
 typedef struct {
-    char xdsl2LInvG994VendorId[8];
-    char xdsl2LInvSystemVendorId[8];
-    char xdsl2LInvVersionNumber[16];
+    char xdsl2LInvG994VendorId[32];
+    char xdsl2LInvSystemVendorId[32];
+    char xdsl2LInvVersionNumber[32];
     char xdsl2LInvSerialNumber[32];
+
+    uint8_t xdsl2LInvSystemVendorId_len;
+    uint8_t xdsl2LInvVersionNumber_len;
 } xdsl_vendor_info_t;
 
 uint8_t get_xdslctl_stats(xdsl_stats_t* stats_array, uint8_t max_lines);

@@ -118,16 +118,37 @@ static void parse_stat_line(char* line, xdsl_stats_t* stats, uint8_t* current_be
 	}
 }
 
+static size_t parse_hex_octets(const char *hex, u_char *out, size_t outlen)
+{
+	size_t count = 0;
+	while (*hex && *(hex + 1) && count < outlen) {
+		unsigned int byte;
+		if (sscanf(hex, "%2x", &byte) != 1)
+			break;
+		out[count++] = (u_char)byte;
+		hex += 2;
+	}
+	return count;
+}
+
 static void parse_vendor_line(char* line, xdsl_vendor_info_t* vendor_info)
 {
 	if (strncmp(line, "ChipSet Vendor Id:", 18) == 0) {
-		sscanf(line, "ChipSet Vendor Id: %8[^:]:0x%x", vendor_info->xdsl2LInvG994VendorId, vendor_info->xdsl2LInvSystemVendorId);
+		char vendorBytes[64];
+		if(sscanf(line, "ChipSet Vendor Id: %31[^:]:0x%63s", vendor_info->xdsl2LInvG994VendorId, vendorBytes) == 2){
+			vendor_info->xdsl2LInvSystemVendorId_len = parse_hex_octets(vendorBytes, (u_char *)vendor_info->xdsl2LInvSystemVendorId, sizeof(vendor_info->xdsl2LInvSystemVendorId));
+		}
 	}
 	else if (strncmp(line, "ChipSet VersionNumber:", 22) == 0) {
-		sscanf(line, "ChipSet VersionNumber: 0x%x", vendor_info->xdsl2LInvVersionNumber);
+		char versionBytes[64];
+		if(sscanf(line, "ChipSet VersionNumber: 0x%63s", versionBytes) == 1){
+			vendor_info->xdsl2LInvVersionNumber_len = parse_hex_octets(versionBytes, (u_char *)vendor_info->xdsl2LInvVersionNumber, sizeof(vendor_info->xdsl2LInvVersionNumber));
+		}
 	}
 	else if (strncmp(line, "ChipSet SerialNumber:", 21) == 0) {
-		sscanf(line, "ChipSet SerialNumber: %31s", vendor_info->xdsl2LInvSerialNumber);
+		if(sscanf(line, "ChipSet SerialNumber: %31s", vendor_info->xdsl2LInvSerialNumber) != 1){
+			vendor_info->xdsl2LInvSerialNumber[0] = '\0';
+		}
 	}
 }
 
